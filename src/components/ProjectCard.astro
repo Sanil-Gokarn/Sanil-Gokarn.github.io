@@ -1,0 +1,37 @@
+---
+import type { CollectionEntry } from 'astro:content';
+import ProjectCover from './ProjectCover.astro';
+import StatusBadge from './StatusBadge.astro';
+
+interface Props {
+  project: CollectionEntry<'projects'>;
+}
+
+const { project } = Astro.props;
+const { title, summary, category, period, status, tech } = project.data;
+---
+
+<article class="group card relative flex h-full flex-col overflow-hidden transition-colors hover:border-accent/60" data-category={category}>
+  <div class="aspect-video overflow-hidden border-b border-line">
+    <ProjectCover project={project.data} />
+  </div>
+  <div class="flex flex-1 flex-col p-5">
+    <p class="flex flex-wrap items-center gap-x-2 gap-y-1 font-mono text-xs text-subtle">
+      <span>{category}</span>
+      <span aria-hidden="true">·</span>
+      <span>{period}</span>
+      {status !== 'Completed' && <span aria-hidden="true">·</span>}
+      <StatusBadge status={status} />
+    </p>
+    <h3 class="mt-2 text-lg font-semibold tracking-tight">
+      <a href={`/projects/${project.id}/`} class="transition-colors group-hover:text-accent">
+        <span class="absolute inset-0" aria-hidden="true"></span>
+        {title}
+      </a>
+    </h3>
+    <p class="mt-2 line-clamp-3 text-sm leading-relaxed text-muted">{summary}</p>
+    <ul class="mt-auto flex flex-wrap gap-1.5 pt-4">
+      {tech.slice(0, 4).map((t) => <li class="chip">{t}</li>)}
+    </ul>
+  </div>
+</article>

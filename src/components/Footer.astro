@@ -1,0 +1,26 @@
+---
+import Icon from './Icon.astro';
+import { profile } from '../data/profile';
+---
+
+<footer class="border-t border-line">
+  <div class="container-page flex flex-col gap-4 py-8 text-sm text-subtle sm:flex-row sm:items-center sm:justify-between">
+    <p>© {new Date().getFullYear()} {profile.name}</p>
+    <ul class="flex items-center gap-4">
+      <li>
+        <a href={`mailto:${profile.email}`} class="inline-flex items-center gap-1.5 hover:text-ink">
+          <Icon name="mail" /> Email
+        </a>
+      </li>
+      {
+        profile.socials.map((s) => (
+          <li>
+            <a href={s.href} class="inline-flex items-center gap-1.5 hover:text-ink" target="_blank" rel="noopener">
+              <Icon name={s.label === 'GitHub' ? 'github' : 'linkedin'} /> {s.label}
+            </a>
+          </li>
+        ))
+      }
+    </ul>
+  </div>
+</footer>

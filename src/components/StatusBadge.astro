@@ -1,0 +1,18 @@
+---
+interface Props {
+  status: 'Completed' | 'In progress' | 'Live';
+}
+const { status } = Astro.props;
+---
+
+{
+  status !== 'Completed' && (
+    <span class:list={['inline-flex items-center gap-1.5', status === 'Live' ? 'text-live' : 'text-progress']}>
+      <span class="relative flex size-2">
+        {status === 'Live' && <span class="absolute inline-flex h-full w-full animate-ping rounded-full bg-live opacity-60" />}
+        <span class:list={['relative inline-flex size-2 rounded-full', status === 'Live' ? 'bg-live' : 'bg-progress']} />
+      </span>
+      {status}
+    </span>
+  )
+}

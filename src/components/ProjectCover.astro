@@ -1,0 +1,119 @@
+---
+import { Image } from 'astro:assets';
+import type { CollectionEntry } from 'astro:content';
+
+interface Props {
+  project: CollectionEntry<'projects'>['data'];
+  sizes?: string;
+  eager?: boolean;
+  large?: boolean;
+}
+
+const { project, sizes = '(min-width: 1024px) 560px, (min-width: 640px) 50vw, 100vw', eager = false, large = false } = Astro.props;
+const { cover, coverAlt, title, category, metrics } = project;
+
+const widths = cover ? [480, 800, 1200].filter((w) => w < cover.width).concat(cover.width) : [];
+const portrait = cover ? cover.height > cover.width : false;
+
+// Projects without a screenshot get a generated cover. A seed from the title
+// makes each one slightly different within its category.
+let seed = [...title].reduce((h, c) => (h * 31 + c.charCodeAt(0)) >>> 0, 7);
+const uid = `cover-${seed.toString(36)}`;
+const rand = () => (seed = (seed * 1664525 + 1013904223) >>> 0) / 2 ** 32;
+
+const bars = Array.from({ length: 7 }, (_, i) => ({ x: 196 + i * 26, h: 40 + rand() * 130 }));
+const tallest = Math.max(...bars.map((b) => b.h));
+
+const points = Array.from({ length: 7 }, (_, i) => ({ x: 190 + i * 30, y: 190 - i * 16 - rand() * 50 }));
+const scatter = Array.from({ length: 14 }, () => ({ x: 190 + rand() * 185, y: 50 + rand() * 160 }));
+
+const nodes = Array.from({ length: 7 }, (_, i) => ({
+  x: 215 + (i % 3) * 65 + rand() * 25,
+  y: 55 + Math.floor(i / 3) * 70 + rand() * 25,
+  r: 5 + rand() * 5,
+}));
+const edges = nodes.flatMap((n, i) => nodes.slice(i + 1, i + 3).map((m) => [n, m]));
+
+const metric = metrics[0];
+---
+
+<div class="relative h-full w-full overflow-hidden bg-surface-2">
+  {
+    cover ? (
+      <Image
+        src={cover}
+        alt={coverAlt ?? title}
+        widths={widths}
+        sizes={sizes}
+        loading={eager ? 'eager' : 'lazy'}
+        class:list={['h-full w-full', portrait ? 'object-contain p-4' : 'object-cover object-top']}
+      />
+    ) : (
+      <>
+        <svg class="absolute inset-0 h-full w-full" viewBox="0 0 400 250" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+          <defs>
+            <pattern id={uid} width="20" height="20" patternUnits="userSpaceOnUse">
+              <path d="M20 0H0V20" fill="none" class="stroke-line" stroke-width="1" />
+            </pattern>
+          </defs>
+          <rect width="400" height="250" class="fill-accent-soft" />
+          <rect width="400" height="250" fill={`url(#${uid})`} opacity="0.7" />
+
+          {category === 'BI Dashboards' && (
+            <g>
+              {bars.map((b) => (
+                <rect x={b.x} y={210 - b.h} width="16" height={b.h} rx="3" class="fill-accent" opacity={b.h === tallest ? 0.8 : 0.28} />
+              ))}
+              <path d="M186 210.5H380" class="stroke-accent" stroke-width="1.5" opacity="0.5" />
+            </g>
+          )}
+
+          {category === 'Data Analysis' && (
+            <g>
+              {scatter.map((p) => (
+                <circle cx={p.x} cy={p.y} r="2.5" class="fill-accent" opacity="0.22" />
+              ))}
+              <polyline points={points.map((p) => `${p.x},${p.y}`).join(' ')} fill="none" class="stroke-accent" stroke-width="2.5" stroke-linejoin="round" />
+              {points.map((p) => (
+                <circle cx={p.x} cy={p.y} r="4.5" class="fill-accent-soft stroke-accent" stroke-width="2" />
+              ))}
+            </g>
+          )}
+
+          {category === 'AI & Apps' && (
+            <g>
+              {edges.map(([a, b]) => (
+                <line x1={a.x} y1={a.y} x2={b.x} y2={b.y} class="stroke-accent" stroke-width="1.5" opacity="0.35" />
+              ))}
+              {nodes.map((n, i) => (
+                <circle cx={n.x} cy={n.y} r={n.r} class="fill-accent" opacity={i === 3 ? 0.9 : 0.5} />
+              ))}
+              <circle cx={nodes[3].x} cy={nodes[3].y} r={nodes[3].r + 7} fill="none" class="stroke-accent" stroke-width="1.5" opacity="0.5" />
+            </g>
+          )}
+
+          {category === 'Business Analysis' && (
+            <g class="stroke-accent" stroke-width="2" fill="none">
+              <rect x="205" y="40" width="64" height="30" rx="15" class="fill-accent" opacity="0.75" />
+              <rect x="300" y="40" width="72" height="30" rx="5" opacity="0.6" />
+              <path d="M269 55h27m-6-5 6 5-6 5" opacity="0.6" />
+              <path d="M336 70v22m-5-6 5 6 5-6" opacity="0.6" />
+              <path d="M336 96l30 25-30 25-30-25z" opacity="0.6" />
+              <path d="M306 121h-28m6-5-6 5 6 5" opacity="0.6" />
+              <rect x="205" y="106" width="72" height="30" rx="5" opacity="0.6" />
+              <path d="M336 146v22m-5-6 5 6 5-6" opacity="0.6" />
+              <rect x="300" y="172" width="72" height="30" rx="15" class="fill-accent" opacity="0.35" />
+            </g>
+          )}
+        </svg>
+
+        {metric && (
+          <div class:list={['absolute', large ? 'bottom-8 left-8' : 'bottom-5 left-5']}>
+            <p class:list={['font-mono font-semibold tracking-tight text-accent', large ? 'text-5xl' : 'text-3xl']}>{metric.value}</p>
+            <p class:list={['mt-1 max-w-[12rem] text-muted', large ? 'text-sm' : 'text-xs']}>{metric.label}</p>
+          </div>
+        )}
+      </>
+    )
+  }
+</div>

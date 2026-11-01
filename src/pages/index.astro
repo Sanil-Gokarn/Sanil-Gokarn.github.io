@@ -1,0 +1,490 @@
+---
+import Base from '../layouts/Base.astro';
+import Icon from '../components/Icon.astro';
+import Preloader from '../components/Preloader.astro';
+import ProjectCover from '../components/ProjectCover.astro';
+import { profile, experience, education, skills, certifications, awards } from '../data/profile';
+import { getFeaturedProjects, getProjects } from '../lib/projects';
+
+const featured = await getFeaturedProjects();
+const all = await getProjects();
+// Projects that aren't in the slider, listed as links under it.
+const others = all.filter((p) => !featured.some((f) => f.id === p.id));
+// The project shown in the "Case study spotlight" section.
+const spotlight = all.find((p) => p.id === 'car-sales-dashboard') ?? featured[0];
+// Schools link to their websites; companies are plain text.
+type Place = { name: string; href?: string };
+const placeGroups: { label: string; places: Place[] }[] = [
+  { label: 'Experience', places: [...new Set(experience.map((e) => e.company))].map((name) => ({ name })) },
+  { label: 'Education', places: education.map((e) => ({ name: e.school, href: e.href })) },
+];
+const heroStats = [...profile.stats, { value: String(all.length), label: 'projects across BI & AI' }];
+
+// Split "90%" into "90" + "%" so the unit can sit raised next to the number.
+const splitMetric = (value: string) => {
+  const m = value.match(/^([£$]?[\d.,–-]+[KM]?)(\D*)$/);
+  return m ? { main: m[1], unit: m[2] } : { main: value, unit: '' };
+};
+
+const heroFacts = [
+  { icon: 'user' as const, text: profile.role },
+  { icon: 'pin' as const, text: profile.location },
+  { icon: 'chart' as const, text: 'Power BI · SQL · Python' },
+  { icon: 'sparkle' as const, text: 'AI & MCP' },
+];
+
+const steps = [
+  {
+    n: '01',
+    title: 'Understand the question',
+    text: 'Stakeholder workshops, user stories and acceptance criteria, so every report answers a real decision.',
+  },
+  {
+    n: '02',
+    title: 'Prepare the data',
+    text: 'SQL, Power Query and Python to clean, validate and model data from databases, APIs, SharePoint and Excel.',
+  },
+  {
+    n: '03',
+    title: 'Deliver the insight',
+    text: 'Power BI dashboards, DAX measures and AI-assisted tools, tested in UAT and handed over with clear documentation.',
+  },
+];
+
+// The Experience and Education sections share the same row layout.
+type Row = { title: string; org: string; place: string; period: string; href?: string };
+const timelines: { id: string; title: string; rows: Row[] }[] = [
+  {
+    id: 'experience',
+    title: 'Experience',
+    rows: experience.map((e) => ({ title: e.role, org: e.company, place: e.location, period: e.period })),
+  },
+  {
+    id: 'education',
+    title: 'Education',
+    rows: education.map((e) => ({ title: e.degree, org: e.school, place: e.location, period: e.period, href: e.href })),
+  },
+];
+---
+
+<Base>
+  <Preloader />
+
+  <!-- Hero: impact numbers first, on a gradient card with an overlapping fact bar -->
+  <section class="container-page pt-2">
+    <div class="hero-card relative flex min-h-[30rem] flex-col items-center justify-center gap-10 overflow-hidden rounded-[1.75rem] px-6 pb-20 pt-12 text-center text-white sm:px-10 lg:gap-12 lg:px-14">
+      <div>
+        <div class="flex flex-wrap items-center justify-center gap-3">
+          <h1 class="text-sm text-white/75">{profile.name} — {profile.role}</h1>
+          {
+            profile.openToWork && (
+              <p class="inline-flex items-center gap-2 rounded-full bg-white/15 px-3 py-1 text-sm backdrop-blur">
+                <span class="size-1.5 rounded-full bg-[#4ade80]" />
+                Open to work
+              </p>
+            )
+          }
+        </div>
+        <p class="heading-light mt-3 text-balance text-4xl leading-tight sm:text-5xl lg:text-6xl">{profile.headline}</p>
+        <p class="mx-auto mt-4 max-w-2xl text-balance text-base text-white/75 sm:text-lg">
+          {profile.subline.split(/\b(AI)\b/).map((part) => (part === 'AI' ? <strong class="font-semibold text-white">AI</strong> : part))}
+        </p>
+      </div>
+      <dl class="grid w-full max-w-5xl grid-cols-2 gap-y-8 lg:grid-cols-4">
+        {
+          heroStats.map((s, i) => (
+            <div class:list={['flex flex-col items-center border-white/20 px-3', i % 2 === 1 && 'border-l', i === 2 && 'lg:border-l']}>
+              <dt class="mt-3 max-w-56 text-balance text-sm text-white/75 sm:text-base">{s.label}</dt>
+              <dd class="heading-light order-first text-6xl leading-none tabular-nums sm:text-7xl lg:text-8xl">
+                <span class="sr-only">{s.value}</span>
+                <span aria-hidden="true" data-countup>{s.value}</span>
+              </dd>
+            </div>
+          ))
+        }
+      </dl>
+    </div>
+    <div class="relative z-10 mx-auto -mt-9 flex max-w-3xl items-center gap-2 rounded-full bg-surface p-2 pl-6 shadow-[0_10px_40px_-12px_rgba(0,0,0,0.3)]">
+      <ul class="flex flex-1 items-center justify-around gap-3 overflow-hidden text-sm text-muted">
+        {
+          heroFacts.map((f, i) => (
+            <li class:list={['flex items-center gap-2 whitespace-nowrap', i === 1 && 'hidden sm:flex', i > 1 && 'hidden lg:flex']}>
+              {i > 0 && <span class="mr-3 hidden h-6 w-px bg-line sm:block" />}
+              <Icon name={f.icon} class="size-4 shrink-0" />
+              {f.text}
+            </li>
+          ))
+        }
+      </ul>
+      <a href="#work" class="grid size-12 shrink-0 place-items-center rounded-full bg-accent text-on-accent hover:opacity-90" aria-label="See my work">
+        <Icon name="arrow-right" class="size-5" />
+      </a>
+    </div>
+
+    <p class="mt-14 text-center text-sm text-muted">Where I've worked and studied</p>
+    <!-- Stacked on smaller screens, side by side with a divider from xl up -->
+    <div class="mt-6 flex flex-col items-center gap-8 xl:flex-row xl:items-stretch xl:justify-center xl:gap-0">
+      {
+        placeGroups.map((g, i) => (
+          <div class:list={['flex flex-col items-center', i > 0 && 'xl:ml-10 xl:border-l xl:border-line xl:pl-10']}>
+            <p class="eyebrow">{g.label}</p>
+            <ul class="mt-3 flex flex-wrap items-center justify-center gap-x-8 gap-y-3" aria-label={g.label}>
+              {g.places.map((p) => (
+                <li class="text-lg font-semibold tracking-tight text-ink/80">
+                  {p.href ? (
+                    <a href={p.href} target="_blank" rel="noopener" class="group inline-flex items-center gap-1 hover:text-accent">
+                      {p.name}
+                      <Icon name="arrow-up-right" class="size-4 text-subtle group-hover:text-accent" />
+                    </a>
+                  ) : (
+                    p.name
+                  )}
+                </li>
+              ))}
+            </ul>
+          </div>
+        ))
+      }
+    </div>
+  </section>
+
+  <script is:inline>
+    // Count the hero numbers up from zero once they're on screen. Waits for
+    // the preloader to finish if it's showing. Screen readers get the final
+    // values from the sr-only copies.
+    (function () {
+      if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+      var items = [].slice
+        .call(document.querySelectorAll('[data-countup]'))
+        .map(function (el) {
+          var m = el.textContent.match(/^(\D*)(\d+)(.*)$/);
+          if (!m) return null;
+          var item = { el: el, final: el.textContent, prefix: m[1], to: Number(m[2]), suffix: m[3] };
+          el.textContent = item.prefix + '0' + item.suffix;
+          return item;
+        })
+        .filter(Boolean);
+      if (!items.length) return;
+
+      function run() {
+        // Lock each number to its final width so the layout doesn't shift while counting.
+        items.forEach(function (it) {
+          it.el.style.display = 'inline-block';
+          it.el.textContent = it.final;
+          it.el.style.minWidth = it.el.getBoundingClientRect().width + 'px';
+          it.el.textContent = it.prefix + '0' + it.suffix;
+        });
+        var t0 = performance.now();
+        function frame(now) {
+          var running = false;
+          items.forEach(function (it, i) {
+            var p = Math.min(1, Math.max(0, (now - t0 - i * 120) / 1400));
+            it.el.textContent = p >= 1 ? it.final : it.prefix + Math.round((1 - Math.pow(1 - p, 3)) * it.to) + it.suffix;
+            if (p < 1) running = true;
+          });
+          if (running) requestAnimationFrame(frame);
+        }
+        requestAnimationFrame(frame);
+      }
+
+      function whenVisible() {
+        var target = items[0].el.closest('dl');
+        if (!('IntersectionObserver' in window)) return run();
+        var io = new IntersectionObserver(
+          function (entries) {
+            if (!entries.some(function (e) { return e.isIntersecting; })) return;
+            io.disconnect();
+            run();
+          },
+          { threshold: 0.3 },
+        );
+        io.observe(target);
+      }
+
+      if (document.querySelector('.preloader')) window.addEventListener('preloader:done', whenVisible, { once: true });
+      else whenVisible();
+    })();
+  </script>
+
+  <!-- Featured projects slider -->
+  <section id="work" class="container-page py-24" data-slider>
+    <div class="flex flex-wrap items-end justify-between gap-6">
+      <div>
+        <p class="text-sm text-muted">Selected work</p>
+        <h2 class="heading-light mt-2 text-4xl sm:text-5xl">Featured projects</h2>
+      </div>
+      <div class="flex items-center gap-3">
+        <span class="font-mono text-sm text-muted" data-count>01 / {String(featured.length).padStart(2, '0')}</span>
+        <button type="button" data-prev class="grid size-11 place-items-center rounded-full border border-line hover:border-ink" aria-label="Previous project">
+          <Icon name="arrow-left" />
+        </button>
+        <button type="button" data-next class="grid size-11 place-items-center rounded-full bg-accent text-on-accent hover:opacity-90" aria-label="Next project">
+          <Icon name="arrow-right" />
+        </button>
+      </div>
+    </div>
+
+    <div class="mt-10">
+      {
+        featured.map((p, i) => {
+          const metric = p.data.metrics[0];
+          const parts = metric ? splitMetric(metric.value) : null;
+          return (
+            <article data-slide aria-label={`Project ${i + 1} of ${featured.length}`} class="slide">
+              <a href={`/projects/${p.id}/`} class="block aspect-video overflow-hidden rounded-[1.75rem] md:aspect-[16/7]">
+                <ProjectCover project={p.data} large eager={i === 0} sizes="(min-width: 1152px) 1088px, 100vw" />
+              </a>
+              <div class="relative mt-8 h-px bg-line">
+                <span class="absolute inset-y-0 left-0 bg-ink" style={`width:${((i + 1) / featured.length) * 100}%`} />
+              </div>
+              <div class="mt-8 grid items-baseline gap-2 sm:grid-cols-[1fr_auto_1fr]">
+                <h3 class="heading-light text-3xl sm:text-4xl">{p.data.title}</h3>
+                <p class="text-muted sm:text-center">{p.data.period}</p>
+                <p class="text-muted sm:text-right">{p.data.status}</p>
+              </div>
+              <div class="mt-6 grid gap-3 md:grid-cols-3">
+                <div class="cell">
+                  <p class="text-sm text-muted">Type</p>
+                  <p class="heading-light mt-auto text-2xl">{p.data.category}</p>
+                </div>
+                <div class="cell items-center justify-center text-center">
+                  {metric && parts && (
+                    <>
+                      <p class="text-sm text-muted">{metric.label}</p>
+                      <p class="heading-light mt-2 text-6xl sm:text-7xl">
+                        {parts.main}
+                        {parts.unit && <sup class="ml-1 align-super text-3xl text-subtle">{parts.unit}</sup>}
+                      </p>
+                    </>
+                  )}
+                </div>
+                <div class="cell">
+                  <p class="text-sm text-muted">Tools</p>
+                  <p class="heading-light mt-auto text-2xl">{p.data.tech.slice(0, 3).join(', ')}</p>
+                </div>
+              </div>
+              <a href={`/projects/${p.id}/`} class="btn-primary mt-6 px-6 py-3.5">
+                View case study <Icon name="arrow-right" />
+              </a>
+            </article>
+          );
+        })
+      }
+    </div>
+    <!-- The rest of the work, as a slim panel of links rather than more cards -->
+    <div class="mt-12 rounded-[1.75rem] border border-line p-6 sm:p-8">
+      <div class="flex flex-wrap items-end justify-between gap-4">
+        <div>
+          <p class="text-sm text-muted">Beyond the highlights</p>
+          <p class="heading-light mt-1 text-3xl sm:text-4xl">+{others.length} more projects</p>
+        </div>
+        <a href="/projects/" class="btn-secondary px-5 py-3">
+          See all {all.length} projects <Icon name="arrow-right" />
+        </a>
+      </div>
+      <!-- One swipeable row on small screens, wrapping from md up -->
+      <ul class="-mx-6 mt-6 flex gap-2 overflow-x-auto px-6 pb-1 sm:-mx-8 sm:px-8 md:mx-0 md:flex-wrap md:overflow-visible md:px-0 md:pb-0">
+        {
+          others.map((p) => (
+            <li class="shrink-0">
+              <a
+                href={`/projects/${p.id}/`}
+                class="inline-flex whitespace-nowrap rounded-full border border-line px-4 py-2 text-sm text-muted transition-colors hover:border-accent hover:text-accent"
+              >
+                {p.data.title}
+              </a>
+            </li>
+          ))
+        }
+      </ul>
+    </div>
+  </section>
+  <script is:inline>
+    // Runs straight after the slides are parsed, so only the first one ever shows.
+    (function () {
+      var root = document.querySelector('[data-slider]');
+      var slides = root.querySelectorAll('[data-slide]');
+      var count = root.querySelector('[data-count]');
+      var index = 0;
+      function show(i) {
+        index = (i + slides.length) % slides.length;
+        slides.forEach(function (s, n) {
+          s.hidden = n !== index;
+        });
+        count.textContent = String(index + 1).padStart(2, '0') + ' / ' + String(slides.length).padStart(2, '0');
+      }
+      root.querySelector('[data-prev]').addEventListener('click', function () {
+        show(index - 1);
+      });
+      root.querySelector('[data-next]').addEventListener('click', function () {
+        show(index + 1);
+      });
+      show(0);
+    })();
+  </script>
+
+  <!-- About: text left, stats card right -->
+  <section id="about" class="container-page grid items-center gap-10 pb-24 lg:grid-cols-2">
+    <div class="max-w-lg">
+      <h2 class="heading-light text-4xl sm:text-5xl">About me</h2>
+      {profile.bio.map((p, i) => <p class:list={['leading-relaxed text-muted', i === 0 ? 'mt-6' : 'mt-4']}>{p}</p>)}
+      <a href="#contact" class="btn-primary mt-8 px-6 py-3.5">Get in touch <Icon name="arrow-right" /></a>
+    </div>
+    <div class="hero-card relative overflow-hidden rounded-[1.75rem] p-8 text-white sm:p-10">
+      <span class="grid size-16 place-items-center rounded-2xl bg-white/15 text-xl font-semibold backdrop-blur">{profile.initials}</span>
+      <dl class="mt-16 grid grid-cols-2 gap-x-6 gap-y-10">
+        {
+          profile.highlights.map((s) => (
+            <div class="flex flex-col">
+              <dt class="text-sm text-white/75">{s.label}</dt>
+              <dd class="heading-light order-first text-5xl sm:text-6xl">{s.value}</dd>
+            </div>
+          ))
+        }
+      </dl>
+    </div>
+  </section>
+
+  <!-- Case study spotlight: text left, image right -->
+  <section class="container-page grid items-center gap-10 pb-24 lg:grid-cols-2">
+    <div class="max-w-lg">
+      <p class="text-sm text-muted">Case study spotlight</p>
+      <h2 class="heading-light mt-3 text-4xl sm:text-5xl">{spotlight.data.title}</h2>
+      <p class="mt-6 leading-relaxed text-muted">{spotlight.data.summary}</p>
+      <a href={`/projects/${spotlight.id}/`} class="btn-primary mt-8 px-6 py-3.5">View details <Icon name="arrow-right" /></a>
+    </div>
+    <a href={`/projects/${spotlight.id}/`} class="block aspect-video overflow-hidden rounded-[1.75rem] border border-line">
+      <ProjectCover project={spotlight.data} sizes="(min-width: 1024px) 544px, 100vw" />
+    </a>
+  </section>
+
+  <!-- Process -->
+  <section id="process" class="container-page pb-24">
+    <h2 class="heading-light text-4xl sm:text-5xl">How I work</h2>
+    <ol class="mt-10 grid gap-3 md:grid-cols-3">
+      {
+        steps.map((s, i) => (
+          <li class:list={['cell min-h-60', i === 0 && 'bg-surface']}>
+            <p class="font-mono text-sm text-subtle">{s.n}</p>
+            <div class="mt-auto">
+              <h3 class="heading-light text-2xl">{s.title}</h3>
+              <p class="mt-3 text-sm leading-relaxed text-muted">{s.text}</p>
+            </div>
+          </li>
+        ))
+      }
+    </ol>
+  </section>
+
+  <!-- Skills, certifications and awards -->
+  <section id="skills" class="container-page pb-24">
+    <h2 class="heading-light text-4xl sm:text-5xl">Skills & certifications</h2>
+    <ul class="mt-10 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+      {
+        skills.map((s) => (
+          <li class="cell min-h-0">
+            <p class="text-sm text-muted">{s.group}</p>
+            <p class="mt-5 leading-relaxed">{s.items.join(', ')}</p>
+          </li>
+        ))
+      }
+    </ul>
+    <ul class="mt-12 border-t border-line">
+      {
+        awards.map((a) => (
+          <li class="border-b border-line">
+            <a href={a.href} target="_blank" rel="noopener" class="group grid items-center gap-1 py-5 sm:grid-cols-[1fr_auto] sm:gap-6">
+              <span class="flex items-center gap-3">
+                <Icon name="award" class="size-5 shrink-0 text-accent" />
+                <span class="heading-light text-xl group-hover:text-accent sm:text-2xl">{a.name}</span>
+              </span>
+              <span class="flex items-center gap-2 text-sm text-muted">
+                {a.issuer} · {a.period} <Icon name="arrow-up-right" />
+              </span>
+            </a>
+          </li>
+        ))
+      }
+      {
+        certifications.map((c) => (
+          <li class="border-b border-line">
+            <a href={c.href} target="_blank" rel="noopener" class="group grid items-center gap-1 py-5 sm:grid-cols-[1fr_auto] sm:gap-6">
+              <span class="heading-light text-xl group-hover:text-accent sm:text-2xl">{c.name}</span>
+              <span class="flex items-center gap-2 text-sm text-muted">
+                {c.issuer || 'Certificate'} <Icon name="arrow-up-right" />
+              </span>
+            </a>
+          </li>
+        ))
+      }
+    </ul>
+  </section>
+
+  <!-- Experience, then Education: "title ——— period ——— place" rows -->
+  {
+    timelines.map((t) => (
+      <section id={t.id} class="container-page pb-24">
+        <h2 class="heading-light text-4xl sm:text-5xl">{t.title}</h2>
+        <ul class="mt-10 border-t border-line">
+          {t.rows.map((r) => (
+            <li class="grid items-center gap-2 border-b border-line py-6 md:grid-cols-[1fr_auto_1fr] md:gap-6">
+              <div>
+                <p class="heading-light text-2xl">{r.title}</p>
+                <p class="mt-1 text-sm text-muted">
+                  {r.href ? (
+                    <a href={r.href} target="_blank" rel="noopener" class="group inline-flex items-center gap-1 hover:text-accent">
+                      {r.org}
+                      <Icon name="arrow-up-right" class="size-3.5 text-subtle group-hover:text-accent" />
+                    </a>
+                  ) : (
+                    r.org
+                  )}
+                </p>
+              </div>
+              <p class="flex items-center gap-4 text-sm text-muted">
+                <span class="hidden h-px w-16 bg-line md:block" />
+                {r.period}
+                <span class="hidden h-px w-16 bg-line md:block" />
+              </p>
+              <p class="heading-light text-xl text-muted md:text-right">{r.place}</p>
+            </li>
+          ))}
+        </ul>
+      </section>
+    ))
+  }
+
+  <!-- Contact -->
+  <section id="contact" class="container-page pb-16">
+    <div class="hero-card flex flex-col items-center rounded-[1.75rem] px-6 py-20 text-center text-white sm:py-28">
+      <h2 class="heading-light max-w-2xl text-4xl leading-tight sm:text-6xl">Have data that needs a direction?</h2>
+      <div class="mt-10 flex w-full max-w-md items-center gap-2 rounded-full bg-surface p-2 pl-6 text-ink">
+        <span class="flex-1 truncate text-left text-sm sm:text-base">{profile.email}</span>
+        <a href={`mailto:${profile.email}`} class="grid size-11 shrink-0 place-items-center rounded-full bg-accent text-on-accent hover:opacity-90" aria-label="Email me">
+          <Icon name="arrow-right" />
+        </a>
+      </div>
+      <div class="mt-6 flex gap-6 text-sm text-white/80">
+        {
+          profile.socials.map((s) => (
+            <a href={s.href} target="_blank" rel="noopener" class="hover:text-white">
+              {s.label} ↗
+            </a>
+          ))
+        }
+      </div>
+    </div>
+  </section>
+</Base>
+
+<style>
+  .slide:not([hidden]) {
+    animation: slide-in 0.5s ease;
+  }
+  @keyframes slide-in {
+    from {
+      opacity: 0;
+      transform: translateY(8px);
+    }
+  }
+</style>

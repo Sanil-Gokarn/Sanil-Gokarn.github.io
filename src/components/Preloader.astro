@@ -1,0 +1,98 @@
+---
+// Percentage counter shown on the first page view of a visit. Skipped for
+// reduced motion, and never shown without JavaScript.
+import { profile } from '../data/profile';
+---
+
+<script is:inline define:vars={{ name: profile.name }}>
+  (function () {
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    try {
+      if (sessionStorage.getItem('preloader-seen')) return;
+      sessionStorage.setItem('preloader-seen', '1');
+    } catch (e) {}
+    var el = document.createElement('div');
+    el.className = 'preloader';
+    el.setAttribute('aria-hidden', 'true');
+    el.innerHTML =
+      '<p class="preloader-name"></p><p class="preloader-count"><span>0</span><sup>%</sup></p><div class="preloader-bar"><i></i></div>';
+    el.querySelector('.preloader-name').textContent = name;
+    document.body.appendChild(el);
+    var num = el.querySelector('span');
+    var bar = el.querySelector('i');
+    var start = performance.now();
+    var duration = 1300;
+    var finished = false;
+    // Fade out, and tell the page (e.g. the hero count-up) that it can start.
+    function finish() {
+      if (finished) return;
+      finished = true;
+      el.classList.add('is-done');
+      window.dispatchEvent(new Event('preloader:done'));
+      setTimeout(function () {
+        el.remove();
+      }, 700);
+    }
+    function tick(t) {
+      var p = Math.min(1, (t - start) / duration);
+      var eased = 1 - Math.pow(1 - p, 3);
+      num.textContent = Math.round(eased * 100);
+      bar.style.width = eased * 100 + '%';
+      if (p < 1) return requestAnimationFrame(tick);
+      finish();
+    }
+    requestAnimationFrame(tick);
+    // Animation frames pause in background tabs, so never leave it stuck.
+    setTimeout(finish, 3000);
+  })();
+</script>
+
+<style is:global>
+  .preloader {
+    position: fixed;
+    inset: 0;
+    z-index: 100;
+    display: grid;
+    place-content: center;
+    justify-items: center;
+    background: var(--bg);
+    color: var(--text);
+    transition: opacity 0.6s ease;
+  }
+  .preloader.is-done {
+    opacity: 0;
+    pointer-events: none;
+  }
+  .preloader-name {
+    position: absolute;
+    top: 1.75rem;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 0.9rem;
+    font-weight: 600;
+  }
+  .preloader-count {
+    font-size: clamp(4rem, 12vw, 8rem);
+    font-weight: 300;
+    letter-spacing: -0.04em;
+    font-variant-numeric: tabular-nums;
+  }
+  .preloader-count sup {
+    font-size: 0.4em;
+    color: var(--subtle);
+  }
+  .preloader-bar {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 38%;
+    height: 1px;
+    background: var(--border);
+  }
+  .preloader-bar i {
+    display: block;
+    height: 1px;
+    width: 0;
+    background: var(--text);
+  }
+</style>

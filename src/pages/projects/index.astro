@@ -1,0 +1,61 @@
+---
+import Base from '../../layouts/Base.astro';
+import ProjectCard from '../../components/ProjectCard.astro';
+import { categories } from '../../content.config';
+import { getProjects } from '../../lib/projects';
+
+const projects = await getProjects();
+const filters = [
+  { label: 'All', value: 'all', count: projects.length },
+  ...categories.map((c) => ({ label: c, value: c, count: projects.filter((p) => p.data.category === c).length })),
+].filter((f) => f.count > 0);
+---
+
+<Base title="Projects" description="Dashboards, data analysis, AI tools and consulting work by Sanil Gokarn.">
+  <section class="container-page pb-20 pt-14 sm:pt-20">
+    <p class="eyebrow">Portfolio</p>
+    <h1 class="mt-2 text-4xl font-semibold tracking-tight sm:text-5xl">Projects</h1>
+    <p class="mt-4 max-w-2xl text-lg leading-relaxed text-muted">
+      Power BI dashboards, data analysis, AI-powered tools and consulting work, from client projects to personal builds.
+    </p>
+
+    <div class="mt-10 flex flex-wrap gap-2" role="group" aria-label="Filter projects by category">
+      {
+        filters.map((f, i) => (
+          <button
+            type="button"
+            data-filter={f.value}
+            aria-pressed={i === 0 ? 'true' : 'false'}
+            class="rounded-full border border-line bg-surface px-4 py-2 text-sm text-muted transition-colors hover:text-ink aria-pressed:border-accent aria-pressed:bg-accent aria-pressed:text-on-accent"
+          >
+            {f.label} <span class="ml-1 font-mono text-xs opacity-70">{f.count}</span>
+          </button>
+        ))
+      }
+    </div>
+
+    <ul class="mt-8 grid gap-6 sm:grid-cols-2 lg:grid-cols-3" data-project-grid>
+      {
+        projects.map((project) => (
+          <li data-category={project.data.category}>
+            <ProjectCard project={project} />
+          </li>
+        ))
+      }
+    </ul>
+  </section>
+</Base>
+
+<script>
+  const buttons = document.querySelectorAll<HTMLButtonElement>('[data-filter]');
+  const items = document.querySelectorAll<HTMLElement>('[data-project-grid] > li');
+  buttons.forEach((button) => {
+    button.addEventListener('click', () => {
+      const value = button.dataset.filter;
+      buttons.forEach((b) => b.setAttribute('aria-pressed', String(b === button)));
+      items.forEach((item) => {
+        item.hidden = value !== 'all' && item.dataset.category !== value;
+      });
+    });
+  });
+</script>

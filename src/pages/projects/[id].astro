@@ -1,0 +1,159 @@
+---
+import { Image } from 'astro:assets';
+import { render } from 'astro:content';
+import Base from '../../layouts/Base.astro';
+import Icon from '../../components/Icon.astro';
+import ProjectCover from '../../components/ProjectCover.astro';
+import StatusBadge from '../../components/StatusBadge.astro';
+import { getProjects, type Project } from '../../lib/projects';
+
+export async function getStaticPaths() {
+  const projects = await getProjects();
+  return projects.map((project, i) => ({
+    params: { id: project.id },
+    props: { project, newer: projects[i - 1], older: projects[i + 1] },
+  }));
+}
+
+interface Props {
+  project: Project;
+  newer?: Project;
+  older?: Project;
+}
+
+const { project, newer, older } = Astro.props;
+const { title, summary, category, period, status, tech, metrics, links, gallery, demo, demoAlt } = project.data;
+const { Content } = await render(project);
+
+const linkButtons = [
+  links.live && { label: 'Live site', href: links.live, icon: 'globe' as const },
+  links.repo && { label: 'GitHub repo', href: links.repo, icon: 'github' as const },
+  links.report && { label: 'Full report', href: links.report, icon: 'file' as const },
+  links.certificate && { label: 'Certificate', href: links.certificate, icon: 'award' as const },
+].filter((l) => !!l);
+---
+
+<Base title={title} description={summary}>
+  <article class="container-page pb-20 pt-10 sm:pt-14">
+    <a href="/projects/" class="inline-flex items-center gap-1.5 text-sm text-muted hover:text-ink">
+      <Icon name="arrow-left" /> All projects
+    </a>
+
+    <header class="mt-8 max-w-3xl">
+      <p class="flex flex-wrap items-center gap-x-2 gap-y-1 font-mono text-xs text-subtle">
+        <span>{category}</span>
+        <span aria-hidden="true">·</span>
+        <span>{period}</span>
+        {status !== 'Completed' && <span aria-hidden="true">·</span>}
+        <StatusBadge status={status} />
+      </p>
+      <h1 class="mt-3 text-4xl font-semibold tracking-tight sm:text-5xl">{title}</h1>
+      <p class="mt-5 text-lg leading-relaxed text-muted">{summary}</p>
+      {
+        linkButtons.length > 0 && (
+          <div class="mt-8 flex flex-wrap gap-3">
+            {linkButtons.map((l, i) => (
+              <a href={l.href} target="_blank" rel="noopener" class={i === 0 ? 'btn-primary' : 'btn-secondary'}>
+                <Icon name={l.icon} /> {l.label}
+              </a>
+            ))}
+          </div>
+        )
+      }
+    </header>
+
+    {
+      metrics.length > 0 && (
+        <dl class="mt-12 grid grid-cols-1 gap-px overflow-hidden rounded-2xl border border-line bg-line sm:grid-cols-3">
+          {metrics.map((m) => (
+            <div class="flex flex-col bg-surface p-5 sm:p-6">
+              <dt class="text-sm text-muted">{m.label}</dt>
+              <dd class="order-first font-mono text-2xl font-semibold tracking-tight sm:text-3xl">{m.value}</dd>
+            </div>
+          ))}
+        </dl>
+      )
+    }
+
+    <div class="card mt-8 aspect-[16/9] overflow-hidden">
+      <ProjectCover project={project.data} sizes="(min-width: 1152px) 1088px, 100vw" eager large />
+    </div>
+
+    <div class="mt-14 grid gap-12 lg:grid-cols-[1fr_18rem]">
+      <div class="prose max-w-none">
+        <Content />
+      </div>
+
+      <aside class="space-y-8 lg:sticky lg:top-24 lg:self-start">
+        <div>
+          <h2 class="eyebrow">Tools & skills</h2>
+          <ul class="mt-3 flex flex-wrap gap-1.5">
+            {tech.map((t) => <li class="chip">{t}</li>)}
+          </ul>
+        </div>
+        <dl class="grid grid-cols-2 gap-4 text-sm lg:grid-cols-1">
+          <div>
+            <dt class="eyebrow">Timeline</dt>
+            <dd class="mt-1.5 text-ink">{period}</dd>
+          </div>
+          <div>
+            <dt class="eyebrow">Status</dt>
+            <dd class="mt-1.5 text-ink">{status}</dd>
+          </div>
+        </dl>
+      </aside>
+    </div>
+
+    {
+      demo && (
+        <figure class="mt-16">
+          <h2 class="text-xl font-semibold tracking-tight">Demo</h2>
+          <div class="card mt-6 overflow-hidden bg-surface-2">
+            <img src={demo} alt={demoAlt ?? `${title} demo`} loading="lazy" class="mx-auto max-h-[42rem] w-auto" />
+          </div>
+        </figure>
+      )
+    }
+
+    {
+      gallery.length > 0 && (
+        <section class="mt-16">
+          <h2 class="text-xl font-semibold tracking-tight">More screens</h2>
+          <ul class="mt-6 grid gap-6 md:grid-cols-2">
+            {gallery.map((g) => (
+              <li>
+                <figure>
+                  <a href={g.src.src} target="_blank" rel="noopener" class="card block overflow-hidden transition-colors hover:border-accent/60">
+                    <Image src={g.src} alt={g.alt} widths={[480, 800, 1200].filter((w) => w < g.src.width).concat(g.src.width)} sizes="(min-width: 768px) 50vw, 100vw" loading="lazy" class="w-full" />
+                  </a>
+                  <figcaption class="mt-2 text-sm text-muted">{g.alt}</figcaption>
+                </figure>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )
+    }
+
+    <nav aria-label="More projects" class="mt-20 grid gap-4 border-t border-line pt-8 sm:grid-cols-2">
+      {
+        newer ? (
+          <a href={`/projects/${newer.id}/`} class="card group p-5 transition-colors hover:border-accent/60">
+            <span class="eyebrow inline-flex items-center gap-1.5"><Icon name="arrow-left" class="size-3.5" /> Newer</span>
+            <span class="mt-2 block font-medium group-hover:text-accent">{newer.data.title}</span>
+          </a>
+        ) : (
+          <span />
+        )
+      }
+      {
+        older && (
+          <a href={`/projects/${older.id}/`} class="card group p-5 text-right transition-colors hover:border-accent/60">
+            <span class="eyebrow inline-flex items-center gap-1.5">Older <Icon name="arrow-right" class="size-3.5" /></span>
+            <span class="mt-2 block font-medium group-hover:text-accent">{older.data.title}</span>
+          </a>
+        )
+      }
+    </nav>
+  </article>
+</Base>
