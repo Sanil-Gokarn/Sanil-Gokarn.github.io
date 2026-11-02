@@ -1,0 +1,45 @@
+---
+// A titled list of "title ——— period ——— place" rows, used for Experience and Education.
+import Icon from './Icon.astro';
+
+export type Row = { title: string; org: string; place: string; period: string; href?: string };
+
+interface Props {
+  id: string;
+  title: string;
+  rows: Row[];
+}
+
+const { id, title, rows } = Astro.props;
+---
+
+<section id={id} class="container-page pb-24">
+  <h2 class="heading-light text-4xl sm:text-5xl">{title}</h2>
+  <ul class="mt-10 border-t border-line">
+    {
+      rows.map((r) => (
+        <li class="grid items-center gap-2 border-b border-line py-6 md:grid-cols-[1fr_auto_1fr] md:gap-6">
+          <div>
+            <p class="heading-light text-2xl">{r.title}</p>
+            <p class="mt-1 text-sm text-muted">
+              {r.href ? (
+                <a href={r.href} target="_blank" rel="noopener" class="group inline-flex items-center gap-1 hover:text-accent">
+                  {r.org}
+                  <Icon name="arrow-up-right" class="size-3.5 text-subtle group-hover:text-accent" />
+                </a>
+              ) : (
+                r.org
+              )}
+            </p>
+          </div>
+          <p class="flex items-center gap-4 text-sm text-muted">
+            <span class="hidden h-px w-16 bg-line md:block" />
+            {r.period}
+            <span class="hidden h-px w-16 bg-line md:block" />
+          </p>
+          <p class="heading-light text-xl text-muted md:text-right">{r.place}</p>
+        </li>
+      ))
+    }
+  </ul>
+</section>

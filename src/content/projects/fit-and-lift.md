@@ -12,7 +12,7 @@ metrics:
   - value: Mobile + laptop
     label: responsive design
 featured: true
-order: 2
+order: 3
 ---
 
 ## Overview

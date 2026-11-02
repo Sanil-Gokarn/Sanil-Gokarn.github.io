@@ -14,7 +14,7 @@ metrics:
   - value: "5+"
     label: business KPIs integrated
 featured: true
-order: 1
+order: 2
 ---
 
 ## Overview
