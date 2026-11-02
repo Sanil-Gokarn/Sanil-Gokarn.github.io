@@ -232,7 +232,7 @@ const timelines: { id: string; title: string; rows: Row[] }[] = [
           return (
             <article data-slide aria-label={`Project ${i + 1} of ${featured.length}`} class="slide">
               <a href={`/projects/${p.id}/`} class="block aspect-video overflow-hidden rounded-[1.75rem] md:aspect-[16/7]">
-                <ProjectCover project={p.data} large eager={i === 0} sizes="(min-width: 1152px) 1088px, 100vw" />
+                <ProjectCover project={p.data} large eager={i === 0} sizes="(min-width: 1440px) 1360px, 100vw" />
               </a>
               <div class="relative mt-8 h-px bg-line">
                 <span class="absolute inset-y-0 left-0 bg-ink" style={`width:${((i + 1) / featured.length) * 100}%`} />
@@ -354,7 +354,7 @@ const timelines: { id: string; title: string; rows: Row[] }[] = [
       <a href={`/projects/${spotlight.id}/`} class="btn-primary mt-8 px-6 py-3.5">View details <Icon name="arrow-right" /></a>
     </div>
     <a href={`/projects/${spotlight.id}/`} class="block aspect-video overflow-hidden rounded-[1.75rem] border border-line">
-      <ProjectCover project={spotlight.data} sizes="(min-width: 1024px) 544px, 100vw" />
+      <ProjectCover project={spotlight.data} sizes="(min-width: 1440px) 660px, (min-width: 1024px) 50vw, 100vw" />
     </a>
   </section>
 
