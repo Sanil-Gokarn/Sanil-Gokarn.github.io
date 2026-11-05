@@ -1,5 +1,5 @@
 ---
-title: figma-flow-mcp
+title: AutoFlow
 summary: An MCP server and Figma plugin that let Claude draw clean, automatically laid-out flowcharts straight onto a Figma canvas.
 category: AI & Apps
 period: Oct 2026
@@ -13,17 +13,17 @@ metrics:
     label: layout, no coordinates needed
   - value: Local
     label: nothing leaves your machine
-cover: ../../assets/projects/figma-flow-mcp/screenshot.png
-coverAlt: A flowchart drawn by figma-flow in Figma
-demo: /projects/figma-flow-mcp/demo.gif
-demoAlt: Claude drawing a flowchart in Figma with figma-flow
+cover: ../../assets/projects/autoflow/screenshot.png
+coverAlt: A flowchart drawn by AutoFlow in Figma
+demo: /projects/autoflow/demo.gif
+demoAlt: Claude drawing a flowchart in Figma with AutoFlow
 links:
   repo: https://github.com/Sanil-Gokarn/figma-flow-mcp
 ---
 
 ## Overview
 
-Process mapping is a core part of business analysis, but drawing flowcharts by hand is slow. With figma-flow, you describe a process to Claude and get a finished flowchart in Figma.
+Process mapping is a core part of business analysis, but drawing flowcharts by hand is slow. With AutoFlow, you describe a process to Claude and get a finished flowchart in Figma.
 
 ## How it works
 
@@ -38,5 +38,5 @@ Process mapping is a core part of business analysis, but drawing flowcharts by h
 - **Standard flowchart shapes,** each sized to fit its label: pills for start and end, rectangles for steps, diamonds for decisions, parallelograms for input and output.
 - **Labelled arrows,** such as "Yes" and "No" on decision branches.
 - **Clear errors.** Invalid input names the bad node or edge.
-- **Safe cleanup.** `clear_canvas` removes only what figma-flow drew.
+- **Safe cleanup.** `clear_canvas` removes only what AutoFlow drew.
 - **Local only.** The WebSocket bridge listens on 127.0.0.1.
